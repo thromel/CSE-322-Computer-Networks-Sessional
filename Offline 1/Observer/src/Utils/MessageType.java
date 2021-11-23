@@ -1,0 +1,18 @@
+package Utils;
+
+public enum MessageType {
+    LOGIN_REQUEST,
+    LOGIN_OK,
+    LOGIN_FAIL,
+    LOOKUP_STD,
+    LOOKUP_FILES_ALL,
+    LOOKUP_FILES_SELF,
+    FILE_REQUEST,
+    FILE_UL_REQUEST,
+    FILE_ACCEPT,
+    FILE_REJECT,
+    BUFFER_FULL,
+    UNREAD_MESSAGE,
+    ANNOUNCE,
+    LOGOUT
+}
