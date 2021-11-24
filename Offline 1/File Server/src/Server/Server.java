@@ -4,14 +4,14 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import Client.Observer;
+
 import Utils.File;
 import Utils.Message;
 import Utils.MessageType;
 
 public class Server {
     private static final int PORT = 8818;
-    private static ArrayList<Observer> users = new ArrayList<>();
+    private static ArrayList<String> users = new ArrayList<>();
     private static ServerSocket listener;
     private static HashMap<String, ObjectOutputStream> oos = new HashMap<>();
     private static HashMap<String, ObjectOutputStream> fos = new HashMap<>();
@@ -19,6 +19,73 @@ public class Server {
 
     public static void main(String[] args) {
         System.out.println("Server running . . .");
+
+        Listener listener = new Listener(PORT, false);
+        Thread messageThread = new Thread(listener);
+        messageThread.start();
+
+        Listener listener1 = new Listener(PORT+1, true);
+        Thread fileThread = new Thread(listener1);
+        fileThread.start();
+    }
+
+    public static void addUser(String user){
+        users.add(user);
+    }
+
+    public static void addStream(ObjectOutputStream objectOutputStream, String user){
+        oos.put(user, objectOutputStream);
+    }
+
+    public static void removeStream(String user){
+        oos.remove(user);
+    }
+
+    public static boolean findUser(String user){
+        return oos.containsKey(user);
+    }
+    public static ObjectOutputStream getStream(String user){
+        return oos.get(user);
+    }
+
+    public static String getIP (String user){
+        return ip.get(user);
+    }
+
+    public static void addIP (String user, String IP){
+        ip.put(user, IP);
+    }
+
+    public static void removeIP (String user){
+        ip.remove(user);
+    }
+
+    public static void addFileStream(ObjectOutputStream objectOutputStream, String user){
+        fos.put(user, objectOutputStream);
+    }
+
+    public static void removeFileStream(String user){
+        fos.remove(user);
+    }
+
+
+}
+
+class Listener implements Runnable{
+
+    private int PORT;
+    private ServerSocket listener;
+    private boolean socketType;
+
+    public Listener(int PORT, boolean socketType) {
+        this.PORT = PORT;
+        this.socketType = socketType;
+    }
+
+    @Override
+    public void run() {
+        if (socketType) System.out.println("File Server running at PORT: " + PORT);
+        else System.out.println("Message server running at PORT: " + PORT);
 
         try {
             listener = new ServerSocket(PORT);
@@ -29,7 +96,7 @@ public class Server {
 
         try{
             while (true){
-                Handler serverHandler = new Handler(listener.accept());
+                Handler serverHandler = new Handler(listener.accept(), socketType);
                 Thread serverThread = new Thread(serverHandler);
                 serverThread.start();
             }
@@ -43,30 +110,6 @@ public class Server {
             }
         }
     }
-
-    public static void addUser(Observer user){
-        users.add(user);
-    }
-
-    public static void addStream(ObjectOutputStream objectOutputStream, String user){
-        oos.put(user, objectOutputStream);
-    }
-
-    public static boolean findUser(String user){
-        return oos.containsKey(user);
-    }
-    public static ObjectOutputStream getStream(Observer user){
-        return oos.get(user);
-    }
-
-    public static String getIP (String user){
-        return ip.get(user);
-    }
-
-    public static void addIP (String user, String IP){
-        ip.put(user, IP);
-    }
-
 }
 
 class Handler implements Runnable{
@@ -76,19 +119,22 @@ class Handler implements Runnable{
     private ObjectInputStream objectInputStream;
     private ObjectOutputStream objectOutputStream;
     private String user;
+    private boolean socketType;
 
-    public Handler(Socket accept) {
+    public Handler(Socket accept, boolean socketType) {
         this.socket = accept;
+        this.socketType = socketType;
     }
 
     @Override
     public void run() {
         initConnection();
-        handleLogin();
+        if (!socketType) handleLogin();
+        else handleFSLogin();
 
-        while (socket.isConnected()){
-            handleCommand(receiveMsg());
-        }
+//        while (socket.isConnected()){
+//            handleCommand(receiveMsg());
+//        }
     }
 
     private void handleLogin(){
@@ -112,6 +158,11 @@ class Handler implements Runnable{
                     loginRequest.setType(MessageType.LOGIN_OK);
                     File.mkdir(user);
                     objectOutputStream.writeObject(loginRequest);
+
+                    Server.addIP(user, ip4string);
+                    Server.addStream(objectOutputStream, user);
+                    Server.addUser(user);
+
                 }
             }
         } catch (IOException e) {
@@ -120,6 +171,12 @@ class Handler implements Runnable{
             e.printStackTrace();
         }
     }
+
+    private void handleFSLogin(){
+        Server.addFileStream(objectOutputStream, user);
+        System.out.println("Logged into file server");
+    }
+
     private void handleCommand(Message msg){
 
         if (msg == null) {

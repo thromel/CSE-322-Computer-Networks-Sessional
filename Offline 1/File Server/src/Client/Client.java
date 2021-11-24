@@ -37,7 +37,8 @@ public class Client implements Runnable{
                     msg =  (Message) objectInputStream.readObject();
 //                    System.out.println(msg.getMessage());
                 } catch (EOFException | ClassNotFoundException e){
-                    e.printStackTrace();
+                    System.err.println("Connection lost with server");
+                    System.exit(-1);
                 }
             }
 
