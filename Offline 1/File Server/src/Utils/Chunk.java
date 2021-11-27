@@ -1,10 +1,13 @@
 package Utils;
 
-public class Chunk {
+import java.io.Serializable;
+
+public class Chunk implements Serializable {
     private byte[] bytes;
     private int chunkNo;
     private int totalChunks;
     private int chunkSize;
+    private static final long serialVersionUID = 3L;
 
     public Chunk(byte[] bytes, int chunkNo, int totalChunks, int chunkSize) {
         this.bytes = bytes;

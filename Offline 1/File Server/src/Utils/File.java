@@ -1,20 +1,19 @@
 package Utils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 
-public class File {
+public class File implements Serializable {
     private String fileName;
     private String owner;
     private boolean isPublic;
     private int CHUNK_SIZE;
     private int fileSize;
+    private static final long serialVersionUID = 2L;
 
     public File(String fileName, String owner, boolean isPublic, int CHUNK_SIZE) {
         this.fileName = fileName;
@@ -62,7 +61,9 @@ public class File {
         byte[] array = new byte[0];
         try {
             array = Files.readAllBytes(Paths.get(directory));
-        } catch (IOException e) {
+        } catch (NoSuchFileException d){
+
+        } catch (IOException e ) {
             System.err.println("Error while reading the file");
             e.printStackTrace();
         }
@@ -119,5 +120,20 @@ public class File {
     public static void mkdir (String dirName){
         boolean file = new java.io.File("files/"+dirName).mkdirs();
 
+    }
+
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    @Override
+    public String toString() {
+        return "File{" +
+                "fileName='" + fileName + '\'' +
+                ", owner='" + owner + '\'' +
+                ", isPublic=" + isPublic +
+                ", CHUNK_SIZE=" + CHUNK_SIZE +
+                ", fileSize=" + fileSize +
+                "}\n";
     }
 }
